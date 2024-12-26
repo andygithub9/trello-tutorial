@@ -750,10 +750,47 @@ https://docs.stripe.com/testing
 # Deploy
 
 ## add package.json scripts
+
 在 package.json 的 scripts 增加 `"postinstall": "prisma generate"`
 
 ```json
 "scripts": {
     "postinstall": "prisma generate"
   }
+```
+
+# 如何把卡片拖曳到別的 list
+
+https://youtu.be/pRybm9lXW2c?si=9DdIuzZqTJDXH7sI&t=32638
+
+```tsx
+{
+  // 在畫面需要從 source list drag 位置減掉 movedCard ，再增加 movedCard 到 destination list drop 位置
+
+  // Remove card from the source list
+  const [movedCard] = sourceList.cards.splice(source.index, 1);
+
+  // Assign the new listId to the moved card
+  movedCard.listId = destination.droppableId;
+
+  // Add card to the destination list
+  destList.cards.splice(destination.index, 0, movedCard);
+
+  sourceList.cards.forEach((card, idx) => {
+    card.order = idx;
+  });
+
+  // Update the order for each card in the destination list
+  destList.cards.forEach((card, idx) => {
+    card.order = idx;
+  });
+
+  setOrderedData(newOrderedData);
+
+  // 但是在資料庫的操作只要把 movedCard 的 listId 改成 destination list ， movedCard 就會從 source list 到 destination list 了，之後我們再對 destination list reorder 就可以了，這邊不需再傳 source list 的資料去操作資料庫
+  executeUpdateCardOrder({
+    boardId: boardId,
+    items: destList.cards,
+  });
+}
 ```
